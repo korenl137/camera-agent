@@ -1,0 +1,11 @@
+api:
+  listen: "127.0.0.1:1984"
+  username: ${CAM_USER}
+  password: ${CAM_PASSWORD}
+  local_auth: true  # tailscale serve proxies from loopback; without this auth is skipped
+rtsp:
+  listen: "127.0.0.1:8554"  # ffmpeg source feeds go2rtc through its internal RTSP; module must stay on
+webrtc:
+  listen: ""
+streams:
+  cam: ffmpeg:device?video=/dev/v4l/by-id/usb-Generic_720p_HD_Camera_200901010001-video-index0&input_format=mjpeg&video_size=1280x720#video=h264

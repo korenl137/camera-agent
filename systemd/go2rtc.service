@@ -1,0 +1,11 @@
+[Unit]
+Description=go2rtc webcam streamer
+
+[Service]
+EnvironmentFile=%h/.config/camera-agent/env
+ExecStart=%h/.local/bin/go2rtc -c %h/Projects/camera-agent/go2rtc.yaml
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

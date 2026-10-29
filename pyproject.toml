@@ -1,0 +1,12 @@
+[project]
+name = "camera-agent"
+version = "0.1.0"
+description = "Laptop webcam snapshot MCP server backed by go2rtc"
+requires-python = ">=3.10"
+dependencies = ["mcp[cli]<2"]  # 2.x renamed FastMCP; upgrade deliberately
+
+[dependency-groups]
+dev = ["pytest"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
