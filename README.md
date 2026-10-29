@@ -1,46 +1,46 @@
 # camera-agent
 
-노트북 내장 웹캠을 go2rtc로 스트리밍하고, `camera_snapshot` MCP 도구로 Claude Code와 Codex가 현재 장면을 볼 수 있게 한다.
+Streams the laptop's built-in webcam with go2rtc and exposes a `camera_snapshot` MCP tool so Claude Code and Codex can look at the current scene.
 
 ```
-USB 웹캠 → go2rtc (127.0.0.1:1984, user systemd) ─┬─ tailscale serve (tailnet 전용 HTTP :1984) → 브라우저 시청
-                                                  └─ /api/frame.jpeg ← server.py (FastMCP, stdio) ← Claude Code / Codex
+USB webcam → go2rtc (127.0.0.1:1984, user systemd) ─┬─ tailscale serve (tailnet-only HTTP :1984) → browser viewer
+                                                    └─ /api/frame.jpeg ← server.py (FastMCP, stdio) ← Claude Code / Codex
 ```
 
-## 구성 파일
+## Files
 
-| 파일 | 역할 |
+| File | Role |
 |---|---|
-| `go2rtc.yaml` | 스트림 정의. 계정은 `${CAM_USER}`/`${CAM_PASSWORD}`로 환경에서 읽음 |
-| `systemd/go2rtc.service` | 사용자 서비스. `~/.config/systemd/user/`에 링크 |
-| `server.py` | `camera_snapshot` 도구 하나. 계정은 `~/.config/camera-agent/env`에서 직접 읽음 |
+| `go2rtc.yaml` | Stream definition. Credentials come from the environment as `${CAM_USER}` / `${CAM_PASSWORD}` |
+| `systemd/go2rtc.service` | User service; link it into `~/.config/systemd/user/` |
+| `server.py` | One tool, `camera_snapshot`. Reads credentials directly from `~/.config/camera-agent/env` |
 | `test_server.py` | `uv run pytest` |
 
-비밀번호는 저장소에 없다: `~/.config/camera-agent/env` (권한 600, `CAM_USER`, `CAM_PASSWORD`).
+No secret is stored in this repository. Credentials live in `~/.config/camera-agent/env` (mode 600, `CAM_USER`, `CAM_PASSWORD`).
 
-## 설치 (이 기기에서 한 일)
+## Setup (what was done on this machine)
 
-1. go2rtc 공식 릴리스(`AlexxIT/go2rtc`, v1.9.15 linux_amd64)를 받아 SHA256을 릴리스 digest와 대조하고 `~/.local/bin/go2rtc`에 설치.
-2. `~/.config/camera-agent/env` 작성 (비밀번호는 `secrets.token_urlsafe(24)`).
+1. Download the official go2rtc release (`AlexxIT/go2rtc`, v1.9.15 linux_amd64), compare its SHA256 with the release digest, and install it to `~/.local/bin/go2rtc`.
+2. Create `~/.config/camera-agent/env` (the password came from `secrets.token_urlsafe(24)`).
 3. `ln -s ~/Projects/camera-agent/systemd/go2rtc.service ~/.config/systemd/user/ && systemctl --user enable --now go2rtc`
-4. `tailscale serve --bg --http=1984 http://127.0.0.1:1984` (최초 1회 `sudo tailscale set --operator=$USER`)
+4. `tailscale serve --bg --http=1984 http://127.0.0.1:1984` (run `sudo tailscale set --operator=$USER` once first).
 5. `claude mcp add --scope user laptop-camera -- uv --directory ~/Projects/camera-agent run server.py`
    `codex mcp add laptop-camera -- uv --directory ~/Projects/camera-agent run server.py`
 
-## 알아둘 점
+## Gotchas
 
-- **`local_auth: true`가 필수다.** go2rtc는 기본으로 localhost 요청의 인증을 건너뛰는데, `tailscale serve`가 loopback에서 프록시하므로 이 설정이 없으면 원격 접속에 인증이 없다.
-- **RTSP를 끄면 안 된다.** `ffmpeg:` 소스는 go2rtc 내부 RTSP를 거친다. `127.0.0.1:8554`로만 연다.
-- **비밀번호를 바꾸면 서비스를 재시작한다** (`systemctl --user restart go2rtc`). 열려 있는 에이전트 세션은 새 세션부터 반영된다.
-- `mcp`는 2.x에서 FastMCP 이름이 바뀌어 `<2`로 고정했다.
-- 카메라는 시청자나 스냅샷 요청이 있을 때만 열린다. 덮개를 닫으면 렌즈가 가려진다.
+- **`local_auth: true` is required.** go2rtc skips authentication for localhost requests by default, and `tailscale serve` proxies from loopback, so without this setting remote access has no authentication.
+- **Do not disable RTSP.** The `ffmpeg:` source goes through go2rtc's internal RTSP module; it is bound to `127.0.0.1:8554` only.
+- **Restart the service after changing the password** (`systemctl --user restart go2rtc`). Running agent sessions pick up the new password in a new session.
+- `mcp` is pinned below 2 because 2.x renamed FastMCP.
+- The camera opens only while a viewer or a snapshot request exists. Closing the lid covers the lens.
 
-## 프라이버시
+## Privacy
 
-스냅샷은 에이전트가 도구를 호출할 때만 찍혀 해당 모델 제공자(Anthropic, OpenAI)로 전송된다. 상시 분석이나 저장은 하지 않는다. 카메라가 향한 곳에 사람이 찍히는지 확인할 것.
+A snapshot is taken only when an agent calls the tool, and it is sent to that agent's model provider (Anthropic, OpenAI). Nothing is analyzed continuously or stored. Check that the camera does not point at people.
 
-## 미검증
+## Not yet verified
 
-- 재부팅 후 로그인 없이 서비스와 `tailscale serve`가 올라오는지
-- Codex 대화형 환경에서의 장면 분석
-- Tailscale ACL의 접근 범위 (관리 콘솔에서만 확인 가능)
+- Whether the service and `tailscale serve` come back after a reboot without a login
+- Scene analysis in interactive Codex
+- The Tailscale ACL scope (visible only in the admin console)
