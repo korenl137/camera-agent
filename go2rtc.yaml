@@ -7,5 +7,7 @@ rtsp:
   listen: "127.0.0.1:8554"  # ffmpeg source feeds go2rtc through its internal RTSP; module must stay on
 webrtc:
   listen: ""
+exec:
+  allow_paths: [ffmpeg]  # an authenticated API user can add exec: streams; only ffmpeg may run
 streams:
   cam: ffmpeg:device?video=/dev/v4l/by-id/usb-Generic_720p_HD_Camera_200901010001-video-index0&input_format=mjpeg&video_size=1280x720#video=h264
