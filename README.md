@@ -13,7 +13,7 @@ USB webcam → go2rtc (127.0.0.1:1984, user systemd) ─┬─ tailscale serve (
 |---|---|
 | `go2rtc.yaml` | Stream definition. Credentials come from the environment as `${CAM_USER}` / `${CAM_PASSWORD}` |
 | `systemd/go2rtc.service` | User service; link it into `~/.config/systemd/user/` |
-| `server.py` | One tool, `camera_snapshot`. Reads credentials directly from `~/.config/camera-agent/env` |
+| `server.py` | One tool, `camera_snapshot(camera="cam")`. Reads credentials directly from `~/.config/camera-agent/env` |
 | `test_server.py` | `uv run pytest` |
 
 No secret is stored in this repository. Credentials live in `~/.config/camera-agent/env` (mode 600, `CAM_USER`, `CAM_PASSWORD`).
@@ -26,6 +26,10 @@ No secret is stored in this repository. Credentials live in `~/.config/camera-ag
 4. `tailscale serve --bg --http=1984 http://127.0.0.1:1984` (run `sudo tailscale set --operator=$USER` once first).
 5. `claude mcp add --scope user laptop-camera -- uv --directory ~/Projects/camera-agent run server.py`
    `codex mcp add laptop-camera -- uv --directory ~/Projects/camera-agent run server.py`
+
+## Adding a camera
+
+`camera_snapshot` takes a `camera` argument that is the go2rtc stream name (letters, digits, `-`, `_`, up to 32 characters); the default `cam` is the laptop's built-in webcam. To add one, add a line under `streams:` in `go2rtc.yaml` (for example `printer: rtsp://user:pass@host:8554/cam`), restart the service, and call the tool with `camera="printer"`. The MCP registration does not change. An unknown name returns a clear error instead of a connection error. Agent sessions that were already running keep the old tool schema (no `camera` argument) until restarted. `CAM_BASE` overrides the go2rtc address (default `http://127.0.0.1:1984`); the earlier `CAM_URL` override was removed.
 
 ## Gotchas
 
