@@ -1,0 +1,24 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Camera panel</title>
+<style>
+body{margin:0;font:14px system-ui;background:#111;color:#eee;display:flex;flex-wrap:wrap}
+#v{flex:1 1 640px;min-width:0}#v img{width:100%;display:block}
+#p{flex:0 0 320px;padding:12px;box-sizing:border-box}
+button{margin:2px;padding:6px 10px;background:#333;color:#eee;border:1px solid #555;border-radius:6px;cursor:pointer}
+label{display:block;margin-top:8px}input[type=range]{width:100%}small{color:#999}#e{color:#f88}
+</style>
+<div id="v"><img src="/video"></div>
+<div id="p"><b>Presets</b><div id="pre"></div><div id="e"></div><div id="c"></div></div>
+<script>
+const post=(u,b)=>fetch(u,{method:"POST",body:JSON.stringify(b)}).then(r=>r.json()).then(d=>{e.textContent=d.error||"";if(!d.error)draw(d.controls)});
+let presets=[];
+fetch("/api/controls").then(r=>r.json()).then(d=>{presets=d.presets;pre.innerHTML=presets.map(n=>`<button onclick="post('/api/preset',{name:'${n}'})">${n}</button>`).join("");draw(d.controls)});
+function draw(cs){
+ const auto=cs["Auto Exposure"]?.value===3, awb=cs["White Balance, Automatic"]?.value===1;
+ c.innerHTML=Object.entries(cs).map(([n,k])=>{
+  const off=(n.startsWith("Exposure Time")&&auto)||(n==="White Balance Temperature"&&awb);
+  if(k.max-k.min===1&&k.step===1)return `<label><input type=checkbox ${k.value?"checked":""} onchange="post('/api/set',{'${n}':this.checked?1:0})"> ${n}</label>`;
+  if(n==="Auto Exposure")return `<label><input type=checkbox ${auto?"checked":""} onchange="post('/api/set',{'${n}':this.checked?3:1})"> Auto Exposure</label>`;
+  return `<label>${n} <small>${k.value}</small><input type=range min=${k.min} max=${k.max} step=${k.step} value=${k.value} ${off?"disabled":""} onchange="post('/api/set',{'${n}':+this.value})"></label>`}).join("");
+}
+</script>

@@ -7,7 +7,7 @@ import urllib.request
 from mcp.server.fastmcp import FastMCP, Image
 
 BASE = os.environ.get("CAM_BASE", "http://127.0.0.1:1984")
-DEFAULT_CAMERA = "cam"
+DEFAULT_CAMERA = "cam1"
 CAMERA_NAME = re.compile(r"[A-Za-z0-9_-]{1,32}")
 ENV_FILE = os.path.expanduser("~/.config/camera-agent/env")
 
@@ -54,7 +54,7 @@ def fetch_frame(url: str) -> bytes:
 
 @mcp.tool()
 def camera_snapshot(camera: str = DEFAULT_CAMERA) -> Image:
-    """카메라에서 현재 장면을 한 장 캡처한다. camera는 go2rtc.yaml의 stream 이름이며 기본값 cam은 노트북 내장 웹캠이다."""
+    """카메라에서 현재 장면을 한 장 캡처한다. camera는 go2rtc.yaml의 stream 이름이며 기본값 cam1은 HD Camera, cam2는 USB2.0 Camera다."""
     return Image(data=fetch_frame(snapshot_url(camera)), format="jpeg")
 
 

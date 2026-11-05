@@ -54,7 +54,7 @@ def test_other_http_error_keeps_status_code():
 
 
 def test_default_camera_keeps_existing_stream_name():
-    assert snapshot_url().endswith("/api/frame.jpeg?src=cam")
+    assert snapshot_url().endswith("/api/frame.jpeg?src=cam1")
 
 
 def test_camera_name_goes_into_url():
@@ -72,4 +72,4 @@ def test_tool_passes_camera_to_go2rtc(monkeypatch):
     monkeypatch.setattr(server, "fetch_frame", lambda url: seen.append(url) or JPEG)
     server.camera_snapshot("printer")
     server.camera_snapshot()
-    assert seen[0].endswith("src=printer") and seen[1].endswith("src=cam")
+    assert seen[0].endswith("src=printer") and seen[1].endswith("src=cam1")

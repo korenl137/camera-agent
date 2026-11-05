@@ -1,0 +1,12 @@
+[Unit]
+Description=Camera control panel
+After=go2rtc.service
+
+[Service]
+EnvironmentFile=%h/.config/camera-agent/env
+ExecStart=/usr/bin/python3 %h/Projects/camera-agent/panel.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
