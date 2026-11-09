@@ -1,5 +1,7 @@
 [Unit]
 Description=go2rtc webcam streamer
+# Skip (not restart-loop) on a machine that has no local cameras.yaml yet
+ConditionPathExists=%h/.config/camera-agent/cameras.yaml
 
 [Service]
 EnvironmentFile=%h/.config/camera-agent/env
