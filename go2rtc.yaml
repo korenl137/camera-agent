@@ -9,6 +9,4 @@ webrtc:
   listen: ""
 exec:
   allow_paths: [ffmpeg]  # an authenticated API user can add exec: streams; only ffmpeg may run
-streams:
-  # HD Camera max: 1920x1080 MJPEG 30fps (YUYV drops to 5fps). A 2nd USB2.0 camera on the same hub fails with "No space left on device"
-  cam1: ffmpeg:device?video=/dev/v4l/by-id/usb-SYX-230524-J_HD_Camera-video-index0&input_format=mjpeg&video_size=1920x1080&framerate=30#video=mjpeg
+# streams are per machine: ~/.config/camera-agent/cameras.yaml (see cameras.example.yaml), passed as a second -c
