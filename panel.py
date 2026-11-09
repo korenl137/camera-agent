@@ -2,7 +2,7 @@
 import base64, fcntl, hmac, json, os, struct, urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-DEV = "/dev/v4l/by-id/usb-SYX-230524-J_HD_Camera-video-index0"
+DEV = os.environ.get("CAM1_DEVICE", "")  # this machine's cam1 device, from ~/.config/camera-agent/env
 GO2RTC = os.environ.get("CAM_BASE", "http://127.0.0.1:1984")
 PORT = int(os.environ.get("PANEL_PORT", "8765"))
 USER, PASSWORD = os.environ.get("CAM_USER", ""), os.environ.get("CAM_PASSWORD", "")
@@ -97,4 +97,6 @@ class H(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    if not DEV:
+        raise SystemExit("CAM1_DEVICE is not set: add the cam1 device path to ~/.config/camera-agent/env")
     ThreadingHTTPServer(("127.0.0.1", PORT), H).serve_forever()

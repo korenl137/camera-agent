@@ -41,7 +41,7 @@ def fetch_frame(url: str) -> bytes:
             data = r.read()
     except urllib.error.HTTPError as e:  # subclass of OSError, so it must be caught first
         if e.code == 404:
-            raise RuntimeError("go2rtc에 없는 카메라 이름입니다 (go2rtc.yaml의 streams 이름 확인)") from e
+            raise RuntimeError("go2rtc에 없는 카메라 이름입니다 (~/.config/camera-agent/cameras.yaml의 streams 이름 확인)") from e
         if e.code in (401, 403):
             raise RuntimeError("go2rtc 인증에 실패했습니다 (~/.config/camera-agent/env의 계정 확인)") from e
         raise RuntimeError(f"go2rtc가 오류를 반환했습니다: HTTP {e.code}") from e
@@ -54,7 +54,7 @@ def fetch_frame(url: str) -> bytes:
 
 @mcp.tool()
 def camera_snapshot(camera: str = DEFAULT_CAMERA) -> Image:
-    """카메라에서 현재 장면을 한 장 캡처한다. camera는 go2rtc.yaml의 stream 이름이며 기본값 cam1은 HD Camera, cam2는 USB2.0 Camera다."""
+    """카메라에서 현재 장면을 한 장 캡처한다. camera는 이 PC의 cameras.yaml에 정의된 stream 이름이며 기본값은 cam1이다."""
     return Image(data=fetch_frame(snapshot_url(camera)), format="jpeg")
 
 

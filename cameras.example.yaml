@@ -1,0 +1,13 @@
+# Camera streams for one machine. Copy to ~/.config/camera-agent/cameras.yaml and edit there.
+# systemd/go2rtc.service passes this file to go2rtc with a second -c, so streams are not in the repo.
+#
+# Device paths live in ~/.config/camera-agent/env as CAM1_DEVICE, CAM2_DEVICE, ...
+# (the control panel reads CAM1_DEVICE too). List the stable paths with: ls -l /dev/v4l/by-id/
+# List a camera's formats with: ffmpeg -hide_banner -f v4l2 -list_formats all -i <device>
+#
+# Settings are for a UVC camera that outputs MJPEG. Use a size and framerate the camera lists.
+# Some USB 2.0 cameras drop to ~5 fps in YUYV, and two cameras on one USB 2.0 hub can fail
+# with "No space left on device".
+streams:
+  # cam1 is the default for camera_snapshot and the control panel.
+  cam1: ffmpeg:device?video=${CAM1_DEVICE}&input_format=mjpeg&video_size=1280x720&framerate=30#video=mjpeg
