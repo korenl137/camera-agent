@@ -39,18 +39,28 @@ def controls():
     return out
 
 
-def apply(values):
-    """Validate against the device's own min/max, then write. Unknown names or out-of-range values are rejected."""
-    known = controls()
+def plan(values, known, skip_unknown=False):
+    """Return (writes, skipped). With skip_unknown (presets), controls the device lacks or cannot take are skipped; otherwise they raise."""
+    writes, skipped = {}, []
     for n, v in values.items():
-        if n not in known or not isinstance(v, int) or not known[n]["min"] <= v <= known[n]["max"]:
-            raise ValueError(f"invalid control {n!r}={v!r}")
+        ok = n in known and isinstance(v, int) and known[n]["min"] <= v <= known[n]["max"]
+        if ok: writes[n] = v
+        elif skip_unknown: skipped.append(n)
+        else: raise ValueError(f"invalid control {n!r}={v!r}")
+    return writes, skipped
+
+
+def apply(values, skip_unknown=False):
+    """Validate everything before the first write, then write. Returns the names this device does not have."""
+    known = controls()
+    writes, skipped = plan(values, known, skip_unknown)
     fd = os.open(DEV, os.O_RDWR)
     try:
-        for n, v in values.items():
+        for n, v in writes.items():
             g = bytearray(8); struct.pack_into("Ii", g, 0, known[n]["id"], v); fcntl.ioctl(fd, SET, g)
     finally:
         os.close(fd)
+    return skipped
 
 
 class H(BaseHTTPRequestHandler):
@@ -88,10 +98,10 @@ class H(BaseHTTPRequestHandler):
         if not self.authed(): return
         try:
             data = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
-            if self.path == "/api/set": apply(data)
-            elif self.path == "/api/preset": apply(PRESETS[data["name"]])
+            if self.path == "/api/set": skipped = apply(data)
+            elif self.path == "/api/preset": skipped = apply(PRESETS[data["name"]], skip_unknown=True)
             else: return self.send(404, {"error": "not found"})
-            self.send(200, {"controls": controls()})
+            self.send(200, {"controls": controls(), "skipped": skipped})
         except (ValueError, KeyError, TypeError, OSError) as e:
             self.send(400, {"error": str(e)})
 

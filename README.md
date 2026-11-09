@@ -39,7 +39,7 @@ No secret or device path is stored in this repository. Per-machine settings live
 
 ## Control panel
 
-`tailscale serve --bg --http=8765 http://127.0.0.1:8765` publishes it on the tailnet; it is protected by the same Basic auth as go2rtc. Control values live on the device and reset when the camera is replugged. `cam1` outputs MJPEG (`#video=mjpeg`): the h264 output made `frame.jpeg` take ~1.7 s and the MJPEG endpoint returned nothing. The panel reads the device from `CAM1_DEVICE` and refuses to start without it. The presets use UVC control names (for example `Backlight Compensation`); a camera that lacks one of them gets an "invalid control" error when that preset is applied.
+`tailscale serve --bg --http=8765 http://127.0.0.1:8765` publishes it on the tailnet; it is protected by the same Basic auth as go2rtc. Control values live on the device and reset when the camera is replugged. `cam1` outputs MJPEG (`#video=mjpeg`): the h264 output made `frame.jpeg` take ~1.7 s and the MJPEG endpoint returned nothing. The panel reads the device from `CAM1_DEVICE` and refuses to start without it. A preset skips any control the device does not have, and any value outside the device's min/max, and lists them in the response's `skipped` field; the rest of the preset still applies. `/api/set` still rejects both cases with an error. The panel uses V4L2 ioctls, so it runs only on Linux.
 
 ## Gotchas
 
@@ -47,6 +47,7 @@ No secret or device path is stored in this repository. Per-machine settings live
 
 - **`local_auth: true` is required.** go2rtc skips authentication for localhost requests by default, and `tailscale serve` proxies from loopback, so without this setting remote access has no authentication.
 - **Do not disable RTSP.** The `ffmpeg:` source goes through go2rtc's internal RTSP module; it is bound to `127.0.0.1:8554` only.
+- **No `cameras.yaml` means go2rtc is skipped.** The unit has `ConditionPathExists`, so it does not restart-loop. `systemctl --user status go2rtc` shows the failed condition. Create the file and start the service.
 - **Restart the service after changing the password** (`systemctl --user restart go2rtc`). Running agent sessions pick up the new password in a new session.
 - `mcp` is pinned below 2 because 2.x renamed FastMCP.
 - The camera opens only while a viewer or a snapshot request exists. Closing the lid covers the lens.
