@@ -13,7 +13,7 @@ QUERY, GET, SET, NEXT = 0xC0445624, 0xC008561B, 0xC008561C, 0x80000000
 PRESETS = {
     "default": {"Brightness": 0, "Contrast": 0, "Saturation": 80, "Hue": 0, "Gamma": 84, "Gain": 1, "Sharpness": 2,
                 "Backlight Compensation": 0, "White Balance, Automatic": 1, "Auto Exposure": 3},
-    "sharp": {"Sharpness": 5, "Gamma": 110, "Backlight Compensation": 64},
+    "sharp": {"Sharpness": 7, "Gamma": 110, "Backlight Compensation": 64},
     "backlight": {"Backlight Compensation": 128, "Gamma": 120, "Brightness": 10},
     "night": {"Auto Exposure": 3, "Gain": 8, "Brightness": 30, "Gamma": 140, "Contrast": 20, "Sharpness": 4},
 }
